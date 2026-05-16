@@ -1,0 +1,38 @@
+name: CI/CD Backend Pipeline
+
+on:
+  push:
+    branches:
+      - deploy
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout del código
+        uses: actions/checkout@v3
+
+      - name: Login en Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_USER }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Build y Push de la imagen Docker
+        uses: docker/build-push-action@v4
+        with:
+          context: ./back-Ventas_SpringBoot 
+          tags: ${{ secrets.DOCKER_USER }}/innovatech-backend:latest
+
+      - name: Deploy en Instancia EC2
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ubuntu
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            sudo docker pull ${{ secrets.DOCKER_USER }}/innovatech-backend:latest
+            sudo docker stop innovatech_backend || true
+            sudo docker rm innovatech_backend || true
+            sudo docker run -d --name innovatech_backend -p 8080:8080 ${{ secrets.DOCKER_USER }}/innovatech-backend:latest

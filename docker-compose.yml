@@ -1,0 +1,44 @@
+services:
+  mysql-db:
+    image: mysql:8.0
+    container_name: innovatech-db
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: innovatech_db
+    ports:
+      - "3306:3306"
+    volumes:
+      - db_data:/var/lib/mysql  
+
+  backend-ventas:
+    image: seba35/innovatech-backend-ventas:latest
+    container_name: innovatech-ventas
+    ports:
+      - "8082:8080"
+    depends_on:
+      - mysql-db
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql-db:3306/innovatech_db
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: root
+
+  backend-despachos:
+    image: seba35/innovatech-backend-despachos:latest
+    container_name: innovatech-despachos
+    ports:
+      - "8081:8080"
+    depends_on:
+      - mysql-db
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql-db:3306/innovatech_db
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: root
+
+  frontend:
+    image: seba35/innovatech-frontend:latest
+    container_name: innovatech-front
+    ports:
+      - "80:80"
+
+volumes:
+  db_data:

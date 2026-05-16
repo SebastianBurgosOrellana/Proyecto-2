@@ -1,0 +1,21 @@
+# Dependencias
+node_modules/
+dist/
+build/
+
+# Entornos y secretos
+.env
+.env.local
+.env.*.local
+
+# Terraform (¡Muy importante para no subir el estado o claves de AWS!)
+.terraform/
+*.tfstate
+*.tfstate.backup
+.terraform.lock.hcl
+*.tfvars
+
+# Logs y SO
+*.log
+.DS_Store
+Thumbs.db
