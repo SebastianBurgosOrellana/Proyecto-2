@@ -1,0 +1,82 @@
+name: Frontend CI/CD to AWS ECR
+
+on:
+  push:
+    branches:
+      - deploy 
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
+          aws-region: us-east-1
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+
+      - name: Build, tag, and push image to Amazon ECR
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: innovatech-front 
+          IMAGE_TAG: latest
+        run: |
+          # Compila usando el Dockerfile multi-stage interno
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG ./front_despacho
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+
+  deploy:
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code (To get docker-compose)
+        uses: actions/checkout@v3
+
+      - name: Deploy to EC2 via SSH
+        uses: appleboy/ssh-action@v0.1.10
+        with:
+          host: 54.162.229.166 
+          username: ubuntu
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            # Crear directorio si no existe
+            mkdir -p ~/app
+            
+      - name: Copy docker-compose via SCP inside pipeline
+        uses: appleboy/scp-action@v0.1.4
+        with:
+          host: 54.162.229.166
+          username: ubuntu
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          source: "front_despacho/docker-compose.yml"
+          target: "~/app"
+          strip_components: 1
+
+      - name: Execute Docker Compose inside EC2
+        uses: appleboy/ssh-action@v0.1.10
+        with:
+          host: 54.162.229.166
+          username: ubuntu
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            cd ~/app
+            # Configurar credenciales en la máquina para descargar desde ECR
+            export AWS_ACCESS_KEY_ID="${{ secrets.AWS_ACCESS_KEY_ID }}"
+            export AWS_SECRET_ACCESS_KEY="${{ secrets.AWS_SECRET_ACCESS_KEY }}"
+            export AWS_SESSION_TOKEN="${{ secrets.AWS_SESSION_TOKEN }}"
+            aws ecr get-login-password --region us-east-1 | sudo docker login --username AWS --password-stdin ${{ secrets.AWS_REGISTRY }}
+            
+            # Reemplazar la compilación local por la imagen descargada de ECR en caliente
+            sed -i 's|build:.*|image: ${{ secrets.AWS_REGISTRY }}/innovatech-front:latest|g' docker-compose.yml
+            
+            sudo docker compose pull
+            sudo docker compose up -d --remove-orphans

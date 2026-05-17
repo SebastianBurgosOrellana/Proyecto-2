@@ -1,0 +1,14 @@
+version: '3.9'
+
+services:
+  frontend:
+    build:
+      context: ./front_despacho
+      dockerfile: Dockerfile
+    container_name: frontend_app
+    restart: always
+    ports:
+      - "80:80"
+    environment:
+      - DESPACHOS_API_URL=http://10.0.2.245:8080
+      - VENTAS_API_URL=http://10.0.2.245:8081
