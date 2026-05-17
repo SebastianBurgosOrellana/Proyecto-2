@@ -28,7 +28,7 @@ jobs:
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
         run: |
-          docker build -t $ECR_REGISTRY/innovatech-front:latest ./frontal_despacho
+          docker build -t $ECR_REGISTRY/innovatech-front:latest ./front_despacho
           docker push $ECR_REGISTRY/innovatech-front:latest
 
       - name: Build and Push Backend Despachos
@@ -94,3 +94,7 @@ jobs:
               sudo -E docker compose up -d db backend-despachos backend-ventas
             EOF
             rm ~/vockey.pem
+
+
+
+            }
