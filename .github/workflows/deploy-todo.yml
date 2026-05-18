@@ -68,6 +68,8 @@ jobs:
           username: ubuntu
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
+            sudo apt-get update
+            sudo apt-get install -y awscli
             cd ~/app
             export AWS_REGISTRY="${{ secrets.AWS_REGISTRY }}"
             aws ecr get-login-password --region us-east-1 | sudo docker login --username AWS --password-stdin $AWS_REGISTRY
