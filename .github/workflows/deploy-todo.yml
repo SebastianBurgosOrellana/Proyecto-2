@@ -76,7 +76,7 @@ jobs:
             export AWS_SESSION_TOKEN="${{ secrets.AWS_SESSION_TOKEN }}"
             export AWS_REGISTRY="${{ secrets.AWS_REGISTRY }}"
             aws ecr get-login-password --region us-east-1 | sudo docker login --username AWS --password-stdin $AWS_REGISTRY
-            sudo -E docker compose up -d frontend
+            sudo AWS_REGISTRY=$AWS_REGISTRY docker compose up -d frontend
 
       - name: Deploy Backend to Private EC2 via Bastion Proxy
         uses: appleboy/ssh-action@v0.1.10
