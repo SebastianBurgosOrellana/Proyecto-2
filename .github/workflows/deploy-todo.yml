@@ -85,21 +85,21 @@ jobs:
           username: ubuntu
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/vockey.pem
-            chmod 600 ~/vockey.pem
-            scp -o StrictHostKeyChecking=no -i ~/vockey.pem ~/app/docker-compose.yml ubuntu@10.0.2.245:~/docker-compose.yml
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/vockey.pem
+          chmod 600 ~/vockey.pem
+          scp -o StrictHostKeyChecking=no -i ~/vockey.pem ~/app/docker-compose.yml ubuntu@10.0.2.245:~/
+          
+          ssh -o StrictHostKeyChecking=no -i ~/vockey.pem ubuntu@10.0.2.245 << 'EOF'
+            sudo apt-get update
+            sudo apt-get install -y awscli docker.io docker-compose-v2
             
-            ssh -o StrictHostKeyChecking=no -i ~/vockey.pem ubuntu@10.0.2.245 << 'EOF'
-              export AWS_REGISTRY="${{ secrets.AWS_REGISTRY }}"
-              export AWS_ACCESS_KEY_ID="${{ secrets.AWS_ACCESS_KEY_ID }}"
-              export AWS_SECRET_ACCESS_KEY="${{ secrets.AWS_SECRET_ACCESS_KEY }}"
-              export AWS_SESSION_TOKEN="${{ secrets.AWS_SESSION_TOKEN }}"
-              
-              aws ecr get-login-password --region us-east-1 | sudo docker login --username AWS --password-stdin $AWS_REGISTRY
-              sudo -E docker compose up -d db backend-despachos backend-ventas
-            EOF
-            rm ~/vockey.pem
-
-
-
-            }
+            export AWS_REGISTRY="${{ secrets.AWS_REGISTRY }}"
+            export AWS_ACCESS_KEY_ID="${{ secrets.AWS_ACCESS_KEY_ID }}"
+            export AWS_SECRET_ACCESS_KEY="${{ secrets.AWS_SECRET_ACCESS_KEY }}"
+            export AWS_SESSION_TOKEN="${{ secrets.AWS_SESSION_TOKEN }}"
+            
+            aws ecr get-login-password --region us-east-1 | sudo docker login --username AWS --password-stdin $AWS_REGISTRY
+            sudo AWS_REGISTRY=$AWS_REGISTRY docker compose up -d db backend-despachos backend-ventas
+          EOF
+          
+          rm ~/vockey.pem
