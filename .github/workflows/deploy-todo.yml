@@ -55,7 +55,7 @@ jobs:
       - name: Deploy Frontend to Public EC2
         uses: appleboy/scp-action@v0.1.4
         with:
-          host: 54.162.229.166
+          host: 35.153.169.212
           username: ubuntu
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           source: "docker-compose.yml"
@@ -64,7 +64,7 @@ jobs:
       - name: Start Frontend Container
         uses: appleboy/ssh-action@v0.1.10
         with:
-          host: 54.162.229.166
+          host: 35.153.169.212
           username: ubuntu
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
@@ -78,7 +78,7 @@ jobs:
       - name: Deploy Backend to Private EC2 via Bastion Proxy
         uses: appleboy/ssh-action@v0.1.10
         with:
-          host: 54.162.229.166
+          host: 35.153.169.212
           username: ubuntu
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
